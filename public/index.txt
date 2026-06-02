@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Nick Ball ShuttleSpin</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    color:#e6f1ff;
+
+    background:
+        radial-gradient(circle at 20% 20%, #0f1b3d, transparent 40%),
+        radial-gradient(circle at 80% 30%, #1a0f3d, transparent 40%),
+        radial-gradient(circle at 50% 80%, #002b3d, transparent 50%),
+        #05070f;
+}
+
+/* HEADER */
+.header{
+    text-align:center;
+    padding:18px;
+    background:rgba(10,15,30,0.8);
+    backdrop-filter: blur(10px);
+    border-bottom:1px solid rgba(0,255,255,0.15);
+}
+
+.logo{
+    font-size:44px;
+    font-weight:900;
+    letter-spacing:3px;
+    font-family:"Brush Script MT", cursive;
+
+    color:#00f7ff;
+
+    text-shadow:
+        0 0 10px #00f7ff,
+        0 0 25px #00b3ff,
+        0 0 40px #0066ff;
+}
+
+#mult{
+    font-size:72px;
+    font-weight:bold;
+    color:#ffd54a;
+
+    text-shadow:
+        0 0 10px #ffd54a,
+        0 0 30px #ff9900,
+        0 0 60px #ff5500;
+}
+
+#countdown{
+    font-size:28px;
+    font-weight:bold;
+    color:#ff3b3b;
+    min-height:35px;
+}
+
+/* LAYOUT */
+.main{
+    display:flex;
+    gap:18px;
+    padding:18px;
+}
+
+.left{
+    width:340px;
+}
+
+/* PANELS */
+.panel{
+    background:linear-gradient(145deg, rgba(255,255,255,0.05), rgba(0,0,0,0.4));
+    border:1px solid rgba(0,255,255,0.15);
+    border-radius:16px;
+    padding:15px;
+    margin-bottom:15px;
+
+    box-shadow:0 0 15px rgba(0,255,255,0.08);
+    backdrop-filter: blur(8px);
+}
+
+.panel h3{
+    color:#00f7ff;
+}
+
+/* INPUTS */
+input{
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+    border-radius:10px;
+
+    border:1px solid rgba(0,255,255,0.2);
+
+    background:rgba(0,0,0,0.4);
+    color:#fff;
+}
+
+/* BUTTONS */
+button{
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+button:hover{
+    transform:scale(1.03);
+}
+
+.playBtn{
+    width:100%;
+    padding:14px;
+    font-weight:bold;
+    margin-top:8px;
+}
+
+.start{
+    background:linear-gradient(90deg,#00ff9d,#00c3ff);
+    color:#000;
+    box-shadow:0 0 15px rgba(0,255,200,0.4);
+}
+
+.cash{
+    background:linear-gradient(90deg,#ff7a18,#ff3c3c);
+    color:white;
+    box-shadow:0 0 15px rgba(255,80,0,0.4);
+}
+
+/* RIGHT */
+.right{
+    flex:1;
+    padding:12px;
+
+    background:rgba(10,15,25,0.6);
+    border:1px solid rgba(0,255,255,0.1);
+    border-radius:20px;
+
+    box-shadow:0 0 25px rgba(0,0,0,0.6);
+}
+
+/* CANVAS */
+canvas{
+    width:100%;
+    max-width:900px;
+    height:450px;
+
+    background:
+        radial-gradient(circle at center, #0a1020, #04050a);
+
+    border-radius:20px;
+
+    border:1px solid rgba(0,255,255,0.25);
+
+    box-shadow:
+        0 0 20px rgba(0,255,255,0.1),
+        inset 0 0 30px rgba(0,0,0,0.7);
+}
+
+/* BOXES */
+.box{
+    background:rgba(20,25,40,0.6);
+    border:1px solid rgba(0,255,255,0.1);
+    padding:10px;
+    border-radius:12px;
+    margin-top:15px;
+}
+
+.badge{
+    display:inline-block;
+    padding:5px 10px;
+    margin:4px;
+    border-radius:20px;
+    font-size:12px;
+
+    background:rgba(0,255,255,0.1);
+    border:1px solid rgba(0,255,255,0.2);
+    color:#00f7ff;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <div class="logo">Nick Ball ShuttleSpin</div>
+    <div id="mult">1.00x</div>
+    <div id="countdown"></div>
+    <h3>Points: <span id="points">10000</span></h3>
+</div>
+
+<div class="main">
+
+<div class="left">
+
+    <div class="panel">
+        <h3>Play Panel 1</h3>
+
+        <input type="number" id="p1" value="20" min="20" max="10000">
+
+        <label><input type="checkbox" id="auto1"> Auto Start</label>
+
+        <input type="number" id="t1" value="2.00" step="0.1">
+
+        <button class="playBtn start" onclick="start1()">START</button>
+        <button class="playBtn cash" onclick="cashIn1()">CASH IN</button>
+    </div>
+
+    <div class="panel">
+        <h3>Play Panel 2</h3>
+
+        <input type="number" id="p2" value="20" min="20" max="10000">
+
+        <label><input type="checkbox" id="auto2"> Auto Start</label>
+
+        <input type="number" id="t2" value="3.00" step="0.1">
+
+        <button class="playBtn start" onclick="start2()">START</button>
+        <button class="playBtn cash" onclick="cashIn2()">CASH IN</button>
+    </div>
+
+    <div class="box">
+        <h3>Round History</h3>
+        <div id="history"></div>
+    </div>
+
+</div>
+
+<div class="right">
+    <canvas id="c" width="900" height="450"></canvas>
+
+    <div class="box">
+        <h3>Player Feed</h3>
+        <div id="feed"></div>
+    </div>
+</div>
+
+</div>
+
+<script>
+
+let ws = new WebSocket("ws://localhost:3000");
+
+let state = "RUNNING";
+let currentMultiplier = 1;
+
+let countdown = 5;
+let countdownInterval = null;
+
+let x = 120, y = 200;
+let vx = 4, vy = 3;
+
+let feed = document.getElementById("feed");
+let history = document.getElementById("history");
+let countdownBox = document.getElementById("countdown");
+
+function addFeed(t){
+    let d = document.createElement("div");
+    d.innerText = t;
+    feed.prepend(d);
+}
+
+function start1(){ addFeed("Panel 1 STARTED"); }
+function start2(){ addFeed("Panel 2 STARTED"); }
+
+function cashIn1(){
+    let t = parseFloat(document.getElementById("t1").value);
+    addFeed(currentMultiplier>=t ?
+        "P1 SUCCESS " + currentMultiplier.toFixed(2) + "x" :
+        "P1 FAIL " + currentMultiplier.toFixed(2) + "x");
+}
+
+function cashIn2(){
+    let t = parseFloat(document.getElementById("t2").value);
+    addFeed(currentMultiplier>=t ?
+        "P2 SUCCESS " + currentMultiplier.toFixed(2) + "x" :
+        "P2 FAIL " + currentMultiplier.toFixed(2) + "x");
+}
+
+/* SOCKET */
+ws.onmessage = (msg)=>{
+    let d = JSON.parse(msg.data);
+
+    if(d.type === "multiplier" && state === "RUNNING"){
+        currentMultiplier = parseFloat(d.value);
+        document.getElementById("mult").innerText = d.value + "x";
+    }
+
+    if(d.type === "crash"){
+
+        state = "CRASHED";
+
+        let b = document.createElement("span");
+        b.className = "badge";
+        b.innerText = d.value + "x";
+        history.prepend(b);
+
+        addFeed("CRASHED at " + d.value + "x");
+
+        document.getElementById("mult").innerText = "CRASHED";
+
+        clearInterval(countdownInterval);
+
+        countdown = 5;
+        countdownBox.innerText = "Next round in: " + countdown;
+
+        state = "COUNTDOWN";
+
+        countdownInterval = setInterval(()=>{
+
+            countdown--;
+
+            if(countdown > 0){
+                countdownBox.innerText = "Next round in: " + countdown;
+            }
+
+            if(countdown === 0){
+
+                clearInterval(countdownInterval);
+
+                state = "RUNNING";
+                currentMultiplier = 1;
+
+                document.getElementById("mult").innerText = "1.00x";
+                countdownBox.innerText = "";
+
+                x = 120;
+                y = 200;
+                vx = 4;
+                vy = 3;
+
+                addFeed("NEW ROUND STARTED");
+            }
+
+        },1000);
+    }
+};
+
+/* BALL */
+function draw(){
+    let c = document.getElementById("c");
+    let ctx = c.getContext("2d");
+
+    ctx.clearRect(0,0,c.width,c.height);
+
+    ctx.fillStyle="red";
+    ctx.beginPath();
+    ctx.arc(x,y,12,0,Math.PI*2);
+    ctx.fill();
+
+    if(state === "RUNNING"){
+        x += vx;
+        y += vy;
+    }
+
+    if(x<20||x>880) vx*=-1;
+    if(y<20||y>430) vy*=-1;
+
+    requestAnimationFrame(draw);
+}
+
+draw();
+
+</script>
+
+</body>
+</html>

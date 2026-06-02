@@ -1,0 +1,29 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  background: radial-gradient(circle at bottom, #0b1b3a, #050816);
+  font-family: Arial;
+  color: white;
+}
+
+canvas {
+  display: block;
+}
+
+.ui {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+}
+
+#multiplier {
+  font-size: 40px;
+  color: #22c55e;
+  margin: 10px 0;
+}
+
+button {
+  padding: 10px 15px;
+  cursor: pointer;
+}

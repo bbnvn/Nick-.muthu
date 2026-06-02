@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aviator Sim</title>
+
+  <style>
+    body {
+      margin: 0;
+      background: #0f172a;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    #multiplier {
+      font-size: 60px;
+      margin-bottom: 30px;
+    }
+
+    button {
+      padding: 12px 25px;
+      margin: 10px;
+      font-size: 18px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+    }
+
+    .start {
+      background: #22c55e;
+      color: white;
+    }
+
+    .cashout {
+      background: #f59e0b;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1 id="multiplier">1.00x</h1>
+
+  <div>
+    <button class="start" onclick="startGame()">START</button>
+    <button class="cashout" onclick="cashOut()">CASH OUT</button>
+  </div>
+
+  <script src="script.js"></script>
+
+</body>
+</html>

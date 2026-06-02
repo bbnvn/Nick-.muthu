@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Aviator Demo</title>
+
+<style>
+body{
+    margin:0;
+    background:#0f1117;
+    color:white;
+    font-family:Arial, sans-serif;
+}
+
+.header{
+    text-align:center;
+    padding:15px;
+    background:#151922;
+}
+
+#mult{
+    font-size:72px;
+    font-weight:bold;
+    color:#ffcc00;
+}
+
+.main{
+    display:flex;
+    gap:15px;
+    padding:15px;
+}
+
+.left-panel{
+    width:320px;
+}
+
+.bet-box{
+    background:#1a1f2b;
+    border-radius:12px;
+    padding:15px;
+    margin-bottom:15px;
+}
+
+.bet-box h3{
+    margin-top:0;
+}
+
+.bet-box input{
+    width:100%;
+    padding:10px;
+    margin-top:8px;
+    margin-bottom:8px;
+    box-sizing:border-box;
+}
+
+.bet-box button{
+    width:100%;
+    padding:12px;
+    cursor:pointer;
+}
+
+.game-area{
+    flex:1;
+}
+
+canvas{
+    width:100%;
+    max-width:900px;
+    height:450px;
+    background:#111;
+    border-radius:12px;
+    border:1px solid #333;
+}
+
+.history{
+    margin-top:15px;
+    background:#1a1f2b;
+    padding:10px;
+    border-radius:10px;
+}
+
+.feed{
+    margin-top:15px;
+    background:#1a1f2b;
+    padding:10px;
+    border-radius:10px;
+    height:180px;
+    overflow-y:auto;
+}
+
+.badge{
+    display:inline-block;
+    padding:5px 10px;
+    background:#222;
+    border-radius:20px;
+    margin:4px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>Aviator Demo</h1>
+    <div id="mult">1.00x</div>
+    <h3>Virtual Credits: <span id="credits">10000</span></h3>
+</div>
+
+<div class="main">
+
+    <div class="left-panel">
+
+        <div class="bet-box">
+            <h3>Play Panel 1</h3>
+
+            <input
+            type="number"
+            id="bet1"
+            value="20"
+            min="20"
+            max="10000">
+
+            <label>
+                <input type="checkbox" id="auto1">
+                Auto Play
+            </label>
+
+            <br><br>
+
+            <button onclick="playPanel1()">
+                Play
+            </button>
+        </div>
+
+        <div class="bet-box">
+            <h3>Play Panel 2</h3>
+
+            <input
+            type="number"
+            id="bet2"
+            value="20"
+            min="20"
+            max="10000">
+
+            <label>
+                <input type="checkbox" id="auto2">
+                Auto Play
+            </label>
+
+            <br><br>
+
+            <button onclick="playPanel2()">
+                Play
+            </button>
+        </div>
+
+        <div class="history">
+            <h3>Round History</h3>
+            <div id="history"></div>
+        </div>
+
+    </div>
+
+    <div class="game-area">
+
+        <canvas id="c" width="900" height="450"></canvas>
+
+        <div class="feed">
+            <h3>Player Feed</h3>
+            <div id="feed"></div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+let ws = new WebSocket("ws://localhost:3000");
+
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+
+let x = 150;
+let y = 200;
+
+let vx = 4;
+let vy = 3;
+
+let historyDiv = document.getElementById("history");
+let feedDiv = document.getElementById("feed");
+
+let roundHistory = [];
+
+function addFeed(text){
+    let div = document.createElement("div");
+    div.innerText = text;
+    feedDiv.prepend(div);
+}
+
+function updateHistory(value){
+
+    roundHistory.unshift(value);
+
+    if(roundHistory.length > 10){
+        roundHistory.pop();
+    }
+
+    historyDiv.innerHTML = "";
+
+    roundHistory.forEach(v=>{
+        let span = document.createElement("span");
+        span.className = "badge";
+        span.innerText = v + "x";
+        historyDiv.appendChild(span);
+    });
+}
+
+ws.onmessage = (msg)=>{
+
+    let data = JSON.parse(msg.data);
+
+    if(data.type === "multiplier"){
+
+        document.getElementById("mult").innerText =
+            data.value + "x";
+
+    }
+
+    if(data.type === "crash"){
+
+        updateHistory(data.value);
+
+        addFeed(
+            "Round crashed at " +
+            data.value + "x"
+        );
+    }
+
+    if(data.type === "cashout_success"){
+
+        addFeed(
+            "Cashout at " +
+            Number(data.multiplier).toFixed(2) +
+            "x"
+        );
+    }
+};
+
+function playPanel1(){
+
+    let amount =
+        Number(
+            document.getElementById("bet1").value
+        );
+
+    addFeed(
+        "Panel 1 played with " +
+        amount +
+        " credits"
+    );
+}
+
+function playPanel2(){
+
+    let amount =
+        Number(
+            document.getElementById("bet2").value
+        );
+
+    addFeed(
+        "Panel 2 played with " +
+        amount +
+        " credits"
+    );
+}
+
+function drawBall(){
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    ctx.fillStyle = "red";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x,
+        y,
+        12,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    x += vx;
+    y += vy;
+
+    if(x < 20 || x > canvas.width - 20){
+        vx *= -1;
+    }
+
+    if(y < 20 || y > canvas.height - 20){
+        vy *= -1;
+    }
+
+    requestAnimationFrame(drawBall);
+}
+
+drawBall();
+</script>
+
+</body>
+</html>
