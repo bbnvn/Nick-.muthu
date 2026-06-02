@@ -1,0 +1,111 @@
+
+const canvas = document.createElement("canvas");
+document.body.appendChild(canvas);
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// ---------------- GAME STATE ----------------
+let state = "idle"; // idle | running | crashed
+let multiplier = 1;
+let crashPoint = 0;
+
+let t = 0;
+
+// ---------------- PLANE POSITION ----------------
+function getPosition(t) {
+  const x0 = 100, y0 = canvas.height - 100;
+  const x1 = canvas.width * 0.3, y1 = canvas.height - 500;
+  const x2 = canvas.width * 0.7, y2 = 200;
+  const x3 = canvas.width - 150, y3 = 120;
+
+  const u = 1 - t;
+
+  return {
+    x:
+      u*u*u*x0 +
+      3*u*u*t*x1 +
+      3*u*t*t*x2 +
+      t*t*t*x3,
+
+    y:
+      u*u*u*y0 +
+      3*u*u*t*y1 +
+      3*u*t*t*y2 +
+      t*t*t*y3
+  };
+}
+
+// ---------------- CRASH GENERATOR ----------------
+function generateCrash() {
+  const r = Math.random();
+
+  if (r < 0.5) return (Math.random() * 1.5 + 1.2);
+  if (r < 0.8) return (Math.random() * 3 + 1.5);
+  if (r < 0.95) return (Math.random() * 6 + 3);
+  return (Math.random() * 12 + 8);
+}
+
+// ---------------- START ROUND ----------------
+function startGame() {
+  if (state === "running") return;
+
+  state = "running";
+  multiplier = 1;
+  t = 0;
+
+  crashPoint = generateCrash().toFixed(2);
+}
+
+// expose button globally
+window.startGame = startGame;
+
+// ---------------- CASHOUT ----------------
+function cashOut() {
+  if (state !== "running") return;
+  alert("Cashed at " + multiplier.toFixed(2) + "x");
+}
+window.cashOut = cashOut;
+
+// ---------------- GAME LOOP ----------------
+function loop() {
+  requestAnimationFrame(loop);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (state === "running") {
+
+    t += 0.0015;
+    if (t > 1) t = 1;
+
+    multiplier += 0.02;
+
+    // crash condition
+    if (multiplier >= crashPoint) {
+      state = "crashed";
+      console.log("CRASHED at", crashPoint);
+    }
+
+    const pos = getPosition(t);
+
+    // draw plane
+    ctx.font = "30px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("✈️", pos.x, pos.y);
+
+    // send to server (CMD logging)
+    fetch("/update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        multiplier: multiplier.toFixed(2),
+        crashPoint,
+        state
+      })
+    });
+
+  }
+}
+
+loop();
