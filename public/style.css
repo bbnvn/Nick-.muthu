@@ -39,7 +39,6 @@ header {
     margin: 10px 0;
 }
 
-/* GAME AREA */
 .graph {
     position: relative;
     height: 300px;
@@ -49,16 +48,13 @@ header {
     overflow: hidden;
 }
 
-/* ROCKET FIX (always visible) */
 #rocket {
     position: absolute;
     font-size: 30px;
     left: 0;
     bottom: 0;
-    transform: translate(0%, 0%);
 }
 
-/* PATH */
 .path {
     position: absolute;
     bottom: 0;
@@ -90,7 +86,6 @@ header {
     padding: 8px;
     background: #00ff99;
     border: none;
-    cursor: pointer;
 }
 
 /* CASH PANEL */
@@ -110,5 +105,4 @@ header {
     background: #ff0040;
     border: none;
     color: white;
-    cursor: pointer;
 }
