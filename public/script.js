@@ -25,9 +25,7 @@ function updateBalance() {
 
 updateBalance();
 
-statusBox.innerText = "Ready";
-
-// START ROUND
+// START GAME
 function startRound() {
 
     running = true;
@@ -39,8 +37,6 @@ function startRound() {
     statusBox.innerText = "Flying...";
 
     path.style.width = "0%";
-    rocket.style.left = "0%";
-    rocket.style.bottom = "0px";
 
     interval = setInterval(() => {
 
@@ -49,9 +45,13 @@ function startRound() {
 
         display.innerText = multiplier.toFixed(2) + "x";
 
-        path.style.width = progress + "%";
-        rocket.style.left = progress + "%";
-        rocket.style.bottom = (progress * 1.5) + "px";
+        path.style.width = Math.min(progress, 100) + "%";
+
+        // 🚀 FIXED AVIATOR CAMERA MOVEMENT
+        let x = Math.min(progress, 95);
+        let y = Math.min(progress * 1.2, 90);
+
+        rocket.style.transform = `translate(${x}%, -${y}%)`;
 
         if (multiplier >= crashPoint || progress >= 100) {
             crash();
