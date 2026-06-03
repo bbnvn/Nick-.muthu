@@ -1,98 +1,83 @@
 
-const display = document.querySelector(".multiplier");
-const rocket = document.getElementById("rocket");
-const path = document.getElementById("path");
-const statusBox = document.getElementById("status");
-const balanceBox = document.getElementById("balance");
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 
-const betInput = document.getElementById("betInput");
-const betBtn = document.getElementById("betBtn");
-const cashBtn = document.getElementById("cashBtn");
+const app = express();
+const server = http.createServer(app);
 
-let balance = 1000;
-let bet = 0;
-let lastMultiplier = 1;
-
-// 🔴 CONNECT TO RENDER SERVER (CHANGE THIS LATER)
-const socket = io("https://YOUR-RENDER-URL.onrender.com");
-
-// =================== CONNECTION ===================
-
-socket.on("connect", () => {
-    statusBox.innerText = "Connected ✔";
+// ================= SOCKET.IO (RENDER SAFE) =================
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
 });
 
-// =================== GAME EVENTS ===================
+// ================= GAME STATE =================
+let multiplier = 1;
+let progress = 0;
+let crashPoint = 0;
+let running = false;
 
-socket.on("round_start", () => {
+// ================= START GAME LOOP =================
+function startRound() {
 
-    statusBox.innerText = "Round Started";
+    multiplier = 1;
+    progress = 0;
+    crashPoint = (Math.random() * 8 + 1);
 
-    display.innerText = "1.00x";
+    running = true;
 
-    path.style.width = "0%";
-    rocket.style.transform = "translate(0%, 0%)";
-});
+    io.emit("round_start");
 
-socket.on("update", (data) => {
+    const interval = setInterval(() => {
 
-    display.innerText = data.multiplier + "x";
+        multiplier += multiplier * 0.02;
+        progress += 1;
 
-    let progress = data.progress;
+        io.emit("update", {
+            multiplier: multiplier.toFixed(2),
+            progress: progress
+        });
 
-    path.style.width = Math.min(progress, 100) + "%";
+        if (multiplier >= crashPoint || progress >= 100) {
 
-    // 🚀 KEEP ROCKET ALWAYS IN VIEW
-    let x = Math.min(progress, 95);
-    let y = Math.min(progress * 1.2, 90);
+            clearInterval(interval);
+            running = false;
 
-    rocket.style.transform = `translate(${x}%, -${y}%)`;
+            io.emit("crash", {
+                multiplier: multiplier.toFixed(2)
+            });
 
-    lastMultiplier = parseFloat(data.multiplier);
-});
+            setTimeout(startRound, 5000); // 5 sec loop
+        }
 
-socket.on("crash", (data) => {
+    }, 100);
+}
 
-    statusBox.innerText = "CRASH " + data.multiplier + "x";
+// ================= SOCKET CONNECTION =================
+io.on("connection", (socket) => {
 
-    bet = 0;
-});
+    console.log("User connected:", socket.id);
 
-// =================== BET ===================
-
-betBtn.onclick = () => {
-
-    bet = parseFloat(betInput.value);
-
-    if (!bet || bet <= 0 || bet > balance) return;
-
-    balance -= bet;
-    balanceBox.innerText = "Balance: $" + balance.toFixed(2);
-
-    socket.emit("bet", { amount: bet });
-
-    statusBox.innerText = "Bet placed: $" + bet;
-};
-
-// =================== CASH OUT ===================
-
-cashBtn.onclick = () => {
-
-    if (!bet) return;
-
-    let win = bet * lastMultiplier;
-
-    balance += win;
-
-    balanceBox.innerText = "Balance: $" + balance.toFixed(2);
-
-    socket.emit("cashout", {
-        amount: bet,
-        multiplier: lastMultiplier
+    socket.on("bet", (data) => {
+        console.log("Bet received:", data);
     });
 
-    statusBox.innerText =
-        "CASHED OUT " + lastMultiplier.toFixed(2) + "x";
+    socket.on("cashout", (data) => {
+        console.log("Cashout:", data);
+    });
 
-    bet = 0;
-};
+    socket.on("disconnect", () => {
+        console.log("User disconnected:", socket.id);
+    });
+});
+
+// ================= RENDER SAFE PORT =================
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, () => {
+    console.log("Server running on port", PORT);
+    startRound();
+});
