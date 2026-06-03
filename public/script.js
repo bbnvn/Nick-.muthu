@@ -9,21 +9,27 @@ const betInput = document.getElementById("betInput");
 const betBtn = document.getElementById("betBtn");
 const cashBtn = document.getElementById("cashBtn");
 
+// ================= STATE =================
 let balance = 1000;
 let bet = 0;
 let lastMultiplier = 1;
 
-// 🔴 CONNECT TO RENDER SERVER (CHANGE THIS LATER)
-const socket = io("https://YOUR-RENDER-URL.onrender.com");
+// ================= SOCKET.IO CONNECT =================
+// ⚠️ REPLACE THIS WITH YOUR REAL RENDER URL
+const socket = io("https://YOUR-RENDER-URL.onrender.com", {
+    transports: ["websocket"]
+});
 
-// =================== CONNECTION ===================
-
+// ================= CONNECTION STATUS =================
 socket.on("connect", () => {
     statusBox.innerText = "Connected ✔";
 });
 
-// =================== GAME EVENTS ===================
+socket.on("disconnect", () => {
+    statusBox.innerText = "Disconnected ❌";
+});
 
+// ================= GAME EVENTS =================
 socket.on("round_start", () => {
 
     statusBox.innerText = "Round Started";
@@ -42,7 +48,7 @@ socket.on("update", (data) => {
 
     path.style.width = Math.min(progress, 100) + "%";
 
-    // 🚀 KEEP ROCKET ALWAYS IN VIEW
+    // 🚀 KEEP ROCKET INSIDE FRAME (IMPORTANT FIX)
     let x = Math.min(progress, 95);
     let y = Math.min(progress * 1.2, 90);
 
@@ -58,24 +64,27 @@ socket.on("crash", (data) => {
     bet = 0;
 });
 
-// =================== BET ===================
-
+// ================= BET =================
 betBtn.onclick = () => {
 
     bet = parseFloat(betInput.value);
 
-    if (!bet || bet <= 0 || bet > balance) return;
+    if (!bet || bet <= 0 || bet > balance) {
+        alert("Invalid bet");
+        return;
+    }
 
     balance -= bet;
     balanceBox.innerText = "Balance: $" + balance.toFixed(2);
 
-    socket.emit("bet", { amount: bet });
+    socket.emit("bet", {
+        amount: bet
+    });
 
     statusBox.innerText = "Bet placed: $" + bet;
 };
 
-// =================== CASH OUT ===================
-
+// ================= CASH OUT =================
 cashBtn.onclick = () => {
 
     if (!bet) return;
