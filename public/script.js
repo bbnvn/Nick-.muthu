@@ -3,67 +3,54 @@ const rocket = document.getElementById("rocket");
 const path = document.getElementById("path");
 const statusBox = document.getElementById("status");
 
+let multiplier = 1;
 let progress = 0;
+let running = true;
 
-/*
-Example:
+// Status
+statusBox.innerText = "Local Mode Active";
 
-const socket = new WebSocket(
-    "wss://your-render-server.onrender.com"
-);
+// Start game loop
+function startRound() {
 
-For local testing:
-ws://localhost:8080
-*/
+    multiplier = 1;
+    progress = 0;
 
-const socket = new WebSocket("ws://localhost:8080");
+    path.style.width = "0%";
+    rocket.style.left = "0%";
+    rocket.style.bottom = "0px";
 
-socket.onopen = () => {
-    statusBox.innerText = "Connected";
-};
+    const crashPoint = (Math.random() * 8 + 1).toFixed(2);
 
-socket.onerror = () => {
-    statusBox.innerText = "Connection Error";
-};
+    const interval = setInterval(() => {
 
-socket.onclose = () => {
-    statusBox.innerText = "Disconnected";
-};
+        multiplier += multiplier * 0.02;
+        progress += 0.8;
 
-socket.onmessage = (event) => {
-
-    const data = JSON.parse(event.data);
-
-    if(data.type === "round_start"){
-        progress = 0;
-        path.style.width = "0%";
-        rocket.style.left = "0%";
-        rocket.style.bottom = "0px";
-
-        statusBox.innerText = "Round Started";
-    }
-
-    if(data.type === "update"){
-
-        display.innerText = data.multiplier + "x";
-
-        progress = data.progress;
+        display.innerText = multiplier.toFixed(2) + "x";
 
         path.style.width = progress + "%";
-
         rocket.style.left = progress + "%";
+        rocket.style.bottom = (progress * 1.5) + "px";
 
-        rocket.style.bottom =
-            (progress * 1.5) + "px";
-    }
+        if (multiplier >= crashPoint || progress >= 100) {
 
-    if(data.type === "crash"){
+            clearInterval(interval);
 
-        display.innerText =
-            "💥 CRASH " +
-            data.multiplier +
-            "x";
+            display.innerText =
+                "💥 CRASH " +
+                multiplier.toFixed(2) +
+                "x";
 
-        statusBox.innerText = "Round Crashed";
-    }
-};
+            statusBox.innerText = "Round Crashed";
+
+            setTimeout(() => {
+                statusBox.innerText = "New Round";
+                startRound();
+            }, 3000);
+        }
+
+    }, 100);
+}
+
+startRound();
