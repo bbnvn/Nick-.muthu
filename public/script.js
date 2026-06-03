@@ -1,83 +1,98 @@
 
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
+const display = document.querySelector(".multiplier");
+const rocket = document.getElementById("rocket");
+const path = document.getElementById("path");
+const statusBox = document.getElementById("status");
+const balanceBox = document.getElementById("balance");
 
-const app = express();
-const server = http.createServer(app);
+const betInput = document.getElementById("betInput");
+const betBtn = document.getElementById("betBtn");
+const cashBtn = document.getElementById("cashBtn");
 
-// ================= SOCKET.IO (RENDER SAFE) =================
-const io = new Server(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
+let balance = 1000;
+let bet = 0;
+let lastMultiplier = 1;
+
+// 🔴 CONNECT TO RENDER SERVER (CHANGE THIS LATER)
+const socket = io("https://YOUR-RENDER-URL.onrender.com");
+
+// =================== CONNECTION ===================
+
+socket.on("connect", () => {
+    statusBox.innerText = "Connected ✔";
 });
 
-// ================= GAME STATE =================
-let multiplier = 1;
-let progress = 0;
-let crashPoint = 0;
-let running = false;
+// =================== GAME EVENTS ===================
 
-// ================= START GAME LOOP =================
-function startRound() {
+socket.on("round_start", () => {
 
-    multiplier = 1;
-    progress = 0;
-    crashPoint = (Math.random() * 8 + 1);
+    statusBox.innerText = "Round Started";
 
-    running = true;
+    display.innerText = "1.00x";
 
-    io.emit("round_start");
-
-    const interval = setInterval(() => {
-
-        multiplier += multiplier * 0.02;
-        progress += 1;
-
-        io.emit("update", {
-            multiplier: multiplier.toFixed(2),
-            progress: progress
-        });
-
-        if (multiplier >= crashPoint || progress >= 100) {
-
-            clearInterval(interval);
-            running = false;
-
-            io.emit("crash", {
-                multiplier: multiplier.toFixed(2)
-            });
-
-            setTimeout(startRound, 5000); // 5 sec loop
-        }
-
-    }, 100);
-}
-
-// ================= SOCKET CONNECTION =================
-io.on("connection", (socket) => {
-
-    console.log("User connected:", socket.id);
-
-    socket.on("bet", (data) => {
-        console.log("Bet received:", data);
-    });
-
-    socket.on("cashout", (data) => {
-        console.log("Cashout:", data);
-    });
-
-    socket.on("disconnect", () => {
-        console.log("User disconnected:", socket.id);
-    });
+    path.style.width = "0%";
+    rocket.style.transform = "translate(0%, 0%)";
 });
 
-// ================= RENDER SAFE PORT =================
-const PORT = process.env.PORT || 3000;
+socket.on("update", (data) => {
 
-server.listen(PORT, () => {
-    console.log("Server running on port", PORT);
-    startRound();
+    display.innerText = data.multiplier + "x";
+
+    let progress = data.progress;
+
+    path.style.width = Math.min(progress, 100) + "%";
+
+    // 🚀 KEEP ROCKET ALWAYS IN VIEW
+    let x = Math.min(progress, 95);
+    let y = Math.min(progress * 1.2, 90);
+
+    rocket.style.transform = `translate(${x}%, -${y}%)`;
+
+    lastMultiplier = parseFloat(data.multiplier);
 });
+
+socket.on("crash", (data) => {
+
+    statusBox.innerText = "CRASH " + data.multiplier + "x";
+
+    bet = 0;
+});
+
+// =================== BET ===================
+
+betBtn.onclick = () => {
+
+    bet = parseFloat(betInput.value);
+
+    if (!bet || bet <= 0 || bet > balance) return;
+
+    balance -= bet;
+    balanceBox.innerText = "Balance: $" + balance.toFixed(2);
+
+    socket.emit("bet", { amount: bet });
+
+    statusBox.innerText = "Bet placed: $" + bet;
+};
+
+// =================== CASH OUT ===================
+
+cashBtn.onclick = () => {
+
+    if (!bet) return;
+
+    let win = bet * lastMultiplier;
+
+    balance += win;
+
+    balanceBox.innerText = "Balance: $" + balance.toFixed(2);
+
+    socket.emit("cashout", {
+        amount: bet,
+        multiplier: lastMultiplier
+    });
+
+    statusBox.innerText =
+        "CASHED OUT " + lastMultiplier.toFixed(2) + "x";
+
+    bet = 0;
+};
