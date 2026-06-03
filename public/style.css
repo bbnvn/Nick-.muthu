@@ -30,7 +30,6 @@ header {
     display: flex;
     justify-content: space-between;
     margin-bottom: 10px;
-    opacity: 0.9;
 }
 
 .multiplier {
@@ -40,6 +39,7 @@ header {
     margin: 10px 0;
 }
 
+/* GAME AREA */
 .graph {
     position: relative;
     height: 300px;
@@ -49,15 +49,16 @@ header {
     overflow: hidden;
 }
 
-/* rocket */
+/* ROCKET FIX (always visible) */
 #rocket {
     position: absolute;
-    bottom: 0;
+    font-size: 30px;
     left: 0;
-    font-size: 28px;
+    bottom: 0;
+    transform: translate(0%, 0%);
 }
 
-/* path */
+/* PATH */
 .path {
     position: absolute;
     bottom: 0;
@@ -84,6 +85,14 @@ header {
     margin-bottom: 8px;
 }
 
+.bet-panel button {
+    width: 100%;
+    padding: 8px;
+    background: #00ff99;
+    border: none;
+    cursor: pointer;
+}
+
 /* CASH PANEL */
 .cash-panel {
     position: absolute;
@@ -93,14 +102,6 @@ header {
     padding: 12px;
     border-radius: 10px;
     width: 180px;
-}
-
-.bet-panel button {
-    width: 100%;
-    padding: 8px;
-    background: #00ff99;
-    border: none;
-    cursor: pointer;
 }
 
 .cash-panel button {
