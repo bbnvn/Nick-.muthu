@@ -12,95 +12,103 @@ const cashBtn = document.getElementById("cashBtn");
 let balance = 1000;
 let bet = 0;
 
-let running = false;
-let multiplier = 1;
-let progress = 0;
-let crashPoint = 0;
-let interval;
+// ============================
+// CONNECT TO RENDER SERVER
+// ============================
+// IMPORTANT: replace this after deploy
+const socket = io("https://YOUR-RENDER-URL.onrender.com");
 
-// UPDATE BALANCE
-function updateBalance() {
-    balanceBox.innerText = "Balance: $" + balance.toFixed(2);
-}
+let lastMultiplier = 1;
 
-updateBalance();
+// ============================
+// SOCKET EVENTS (REAL GAME)
+// ============================
 
-// START GAME
-function startRound() {
+socket.on("connect", () => {
+    statusBox.innerText = "Connected to server";
+});
 
-    running = true;
-    multiplier = 1;
-    progress = 0;
+socket.on("round_start", () => {
 
-    crashPoint = (Math.random() * 8 + 1).toFixed(2);
-
-    statusBox.innerText = "Flying...";
+    statusBox.innerText = "Round Started";
 
     path.style.width = "0%";
+    rocket.style.transform = "translate(0%, 0%)";
 
-    interval = setInterval(() => {
+    lastMultiplier = 1;
+});
 
-        multiplier += multiplier * 0.02;
-        progress += 0.8;
+socket.on("update", (data) => {
 
-        display.innerText = multiplier.toFixed(2) + "x";
+    display.innerText = data.multiplier + "x";
 
-        path.style.width = Math.min(progress, 100) + "%";
+    let progress = data.progress;
 
-        // 🚀 FIXED AVIATOR CAMERA MOVEMENT
-        let x = Math.min(progress, 95);
-        let y = Math.min(progress * 1.2, 90);
+    path.style.width = Math.min(progress, 100) + "%";
 
-        rocket.style.transform = `translate(${x}%, -${y}%)`;
+    // KEEP ROCKET INSIDE FRAME (CAMERA FIX)
+    let x = Math.min(progress, 95);
+    let y = Math.min(progress * 1.2, 90);
 
-        if (multiplier >= crashPoint || progress >= 100) {
-            crash();
-        }
+    rocket.style.transform = `translate(${x}%, -${y}%)`;
 
-    }, 100);
-}
+    lastMultiplier = parseFloat(data.multiplier);
+});
 
-// BET
+socket.on("crash", (data) => {
+
+    statusBox.innerText = "CRASH " + data.multiplier + "x";
+
+    // reset bet on crash
+    bet = 0;
+});
+
+// ============================
+// BET SYSTEM (CLIENT SIDE ONLY)
+// ============================
+
 betBtn.onclick = () => {
 
     bet = parseFloat(betInput.value);
 
-    if (!bet || bet <= 0 || bet > balance) return;
+    if (!bet || bet <= 0 || bet > balance) {
+        alert("Invalid bet");
+        return;
+    }
 
     balance -= bet;
-    updateBalance();
+    balanceBox.innerText = "Balance: $" + balance.toFixed(2);
 
     statusBox.innerText = "Bet placed: $" + bet;
 
-    if (!running) startRound();
+    // send to server
+    socket.emit("bet", { amount: bet });
 };
 
+// ============================
 // CASH OUT
+// ============================
+
 cashBtn.onclick = () => {
 
-    if (!running || bet <= 0) return;
+    if (!bet) return;
 
-    let win = bet * multiplier;
+    let win = bet * lastMultiplier;
+
     balance += win;
 
-    updateBalance();
+    balanceBox.innerText = "Balance: $" + balance.toFixed(2);
 
     statusBox.innerText =
-        "CASHED OUT " + multiplier.toFixed(2) + "x +" + win.toFixed(2);
+        "CASHED OUT at " +
+        lastMultiplier.toFixed(2) +
+        "x +" +
+        win.toFixed(2);
+
+    socket.emit("cashout", {
+        amount: bet,
+        multiplier: lastMultiplier
+    });
 
     bet = 0;
 };
-
-// CRASH
-function crash() {
-
-    clearInterval(interval);
-    running = false;
-
-    statusBox.innerText =
-        "CRASH " + multiplier.toFixed(2) + "x";
-
-    bet = 0;
-
-    setTimeout(startRound, 10000);
-}
