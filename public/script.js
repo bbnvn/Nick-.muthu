@@ -1,80 +1,69 @@
+const display = document.querySelector(".multiplier");
+const rocket = document.getElementById("rocket");
+const path = document.getElementById("path");
+const statusBox = document.getElementById("status");
 
-let multiplier = 1;
-let crashPoint = 0;
-let running = false;
-let interval = null;
+let progress = 0;
 
-// ---------------- CRASH POINT ----------------
-function generateCrash() {
-  const r = Math.random();
+/*
+Example:
 
-  if (r < 0.5) return (Math.random() * 1.5 + 1.2);
-  if (r < 0.8) return (Math.random() * 3 + 1.5);
-  if (r < 0.95) return (Math.random() * 6 + 3);
-  return (Math.random() * 12 + 8);
-}
+const socket = new WebSocket(
+    "wss://your-render-server.onrender.com"
+);
 
-// ---------------- START GAME ----------------
-function startGame() {
-  if (running) return;
+For local testing:
+ws://localhost:8080
+*/
 
-  running = true;
-  multiplier = 1;
-  crashPoint = generateCrash().toFixed(2);
+const socket = new WebSocket("ws://localhost:8080");
 
-  interval = setInterval(() => {
-    multiplier += 0.02;
+socket.onopen = () => {
+    statusBox.innerText = "Connected";
+};
 
-    document.getElementById("multiplier").innerText =
-      multiplier.toFixed(2) + "x";
+socket.onerror = () => {
+    statusBox.innerText = "Connection Error";
+};
 
-    // send to server (for Render logs)
-    fetch("/update", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        multiplier: multiplier.toFixed(2),
-        crashPoint,
-        state: "running"
-      })
-    });
+socket.onclose = () => {
+    statusBox.innerText = "Disconnected";
+};
 
-    if (multiplier >= crashPoint) {
-      crashGame();
+socket.onmessage = (event) => {
+
+    const data = JSON.parse(event.data);
+
+    if(data.type === "round_start"){
+        progress = 0;
+        path.style.width = "0%";
+        rocket.style.left = "0%";
+        rocket.style.bottom = "0px";
+
+        statusBox.innerText = "Round Started";
     }
 
-  }, 100);
-}
+    if(data.type === "update"){
 
-// ---------------- CASH OUT ----------------
-function cashOut() {
-  if (!running) return;
+        display.innerText = data.multiplier + "x";
 
-  alert("Cashed out at " + multiplier.toFixed(2) + "x");
-  stopGame();
-}
+        progress = data.progress;
 
-// ---------------- CRASH ----------------
-function crashGame() {
-  clearInterval(interval);
-  running = false;
+        path.style.width = progress + "%";
 
-  document.getElementById("multiplier").innerText =
-    "CRASHED at " + crashPoint + "x";
+        rocket.style.left = progress + "%";
 
-  fetch("/update", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      multiplier,
-      crashPoint,
-      state: "crashed"
-    })
-  });
-}
+        rocket.style.bottom =
+            (progress * 1.5) + "px";
+    }
 
-// ---------------- STOP ----------------
-function stopGame() {
-  clearInterval(interval);
-  running = false;
-}
+    if(data.type === "crash"){
+
+        display.innerText =
+            "💥 CRASH " +
+            data.multiplier +
+            "x";
+
+        statusBox.innerText = "Round Crashed";
+    }
+};
