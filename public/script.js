@@ -3,6 +3,7 @@ const display = document.querySelector(".multiplier");
 const rocket = document.getElementById("rocket");
 const path = document.getElementById("path");
 const statusBox = document.getElementById("status");
+const balanceBox = document.getElementById("balance");
 
 const betInput = document.getElementById("betInput");
 const betBtn = document.getElementById("betBtn");
@@ -17,9 +18,16 @@ let progress = 0;
 let crashPoint = 0;
 let interval;
 
-// STATUS FIX
-statusBox.innerText = "Single Player Mode";
+// UPDATE BALANCE
+function updateBalance() {
+    balanceBox.innerText = "Balance: $" + balance.toFixed(2);
+}
 
+updateBalance();
+
+statusBox.innerText = "Ready";
+
+// START ROUND
 function startRound() {
 
     running = true;
@@ -27,6 +35,8 @@ function startRound() {
     progress = 0;
 
     crashPoint = (Math.random() * 8 + 1).toFixed(2);
+
+    statusBox.innerText = "Flying...";
 
     path.style.width = "0%";
     rocket.style.left = "0%";
@@ -55,12 +65,11 @@ betBtn.onclick = () => {
 
     bet = parseFloat(betInput.value);
 
-    if (!bet || bet <= 0 || bet > balance) {
-        alert("Invalid bet");
-        return;
-    }
+    if (!bet || bet <= 0 || bet > balance) return;
 
     balance -= bet;
+    updateBalance();
+
     statusBox.innerText = "Bet placed: $" + bet;
 
     if (!running) startRound();
@@ -73,6 +82,8 @@ cashBtn.onclick = () => {
 
     let win = bet * multiplier;
     balance += win;
+
+    updateBalance();
 
     statusBox.innerText =
         "CASHED OUT " + multiplier.toFixed(2) + "x +" + win.toFixed(2);
