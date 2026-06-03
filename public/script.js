@@ -8,17 +8,18 @@ const betInput = document.getElementById("betInput");
 const betBtn = document.getElementById("betBtn");
 const cashBtn = document.getElementById("cashBtn");
 
-// ===== GAME STATE =====
 let balance = 1000;
 let bet = 0;
-let running = false;
 
+let running = false;
 let multiplier = 1;
 let progress = 0;
 let crashPoint = 0;
 let interval;
 
-// ===== START ROUND =====
+// STATUS FIX
+statusBox.innerText = "Single Player Mode";
+
 function startRound() {
 
     running = true;
@@ -26,8 +27,6 @@ function startRound() {
     progress = 0;
 
     crashPoint = (Math.random() * 8 + 1).toFixed(2);
-
-    statusBox.innerText = "Flying...";
 
     path.style.width = "0%";
     rocket.style.left = "0%";
@@ -51,7 +50,7 @@ function startRound() {
     }, 100);
 }
 
-// ===== BET =====
+// BET
 betBtn.onclick = () => {
 
     bet = parseFloat(betInput.value);
@@ -64,40 +63,33 @@ betBtn.onclick = () => {
     balance -= bet;
     statusBox.innerText = "Bet placed: $" + bet;
 
-    if (!running) {
-        startRound();
-    }
+    if (!running) startRound();
 };
 
-// ===== CASH OUT =====
+// CASH OUT
 cashBtn.onclick = () => {
 
     if (!running || bet <= 0) return;
 
-    let winnings = bet * multiplier;
-    balance += winnings;
+    let win = bet * multiplier;
+    balance += win;
 
     statusBox.innerText =
-        "CASHED OUT at " +
-        multiplier.toFixed(2) +
-        "x +" +
-        winnings.toFixed(2);
+        "CASHED OUT " + multiplier.toFixed(2) + "x +" + win.toFixed(2);
 
     bet = 0;
 };
 
-// ===== CRASH =====
+// CRASH
 function crash() {
 
     clearInterval(interval);
     running = false;
 
     statusBox.innerText =
-        "CRASHED at " +
-        multiplier.toFixed(2) +
-        "x";
+        "CRASH " + multiplier.toFixed(2) + "x";
 
     bet = 0;
 
-    setTimeout(startRound, 3000);
+    setTimeout(startRound, 2500);
 }
