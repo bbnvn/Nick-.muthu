@@ -102,5 +102,5 @@ function crash() {
 
     bet = 0;
 
-    setTimeout(startRound, 2500);
+    setTimeout(startRound, 10000);
 }
