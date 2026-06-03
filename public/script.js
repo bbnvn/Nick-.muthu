@@ -1,98 +1,103 @@
 
-/* ===== LAYOUT ===== */
-body {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+const display = document.querySelector(".multiplier");
+const rocket = document.getElementById("rocket");
+const path = document.getElementById("path");
+const statusBox = document.getElementById("status");
+
+const betInput = document.getElementById("betInput");
+const betBtn = document.getElementById("betBtn");
+const cashBtn = document.getElementById("cashBtn");
+
+// ===== GAME STATE =====
+let balance = 1000;
+let bet = 0;
+let running = false;
+
+let multiplier = 1;
+let progress = 0;
+let crashPoint = 0;
+let interval;
+
+// ===== START ROUND =====
+function startRound() {
+
+    running = true;
+    multiplier = 1;
+    progress = 0;
+
+    crashPoint = (Math.random() * 8 + 1).toFixed(2);
+
+    statusBox.innerText = "Flying...";
+
+    path.style.width = "0%";
+    rocket.style.left = "0%";
+    rocket.style.bottom = "0px";
+
+    interval = setInterval(() => {
+
+        multiplier += multiplier * 0.02;
+        progress += 0.8;
+
+        display.innerText = multiplier.toFixed(2) + "x";
+
+        path.style.width = progress + "%";
+        rocket.style.left = progress + "%";
+        rocket.style.bottom = (progress * 1.5) + "px";
+
+        if (multiplier >= crashPoint || progress >= 100) {
+            crash();
+        }
+
+    }, 100);
 }
 
-/* GAME BOX CENTER */
-.game-box {
-    width: 90%;
-    max-width: 800px;
-}
+// ===== BET =====
+betBtn.onclick = () => {
 
-/* ===== MULTIPLIER ===== */
-.multiplier {
-    font-size: 80px;
-    color: #00ff99;
-    text-align: center;
-    margin: 20px 0;
-}
+    bet = parseFloat(betInput.value);
 
-/* ===== GRAPH AREA ===== */
-.graph {
-    position: relative;
-    height: 250px;
-    border-radius: 15px;
-    border: 2px solid rgba(0,255,150,0.2);
-    background: rgba(0,0,0,0.4);
-    overflow: hidden;
-}
+    if (!bet || bet <= 0 || bet > balance) {
+        alert("Invalid bet");
+        return;
+    }
 
-/* ===== LEFT BET PANEL (AVIATOR STYLE) ===== */
-.bet-panel {
-    position: absolute;
-    left: 10px;
-    bottom: 20px;
-    width: 200px;
-    padding: 15px;
-    background: rgba(0, 255, 150, 0.08);
-    border: 1px solid rgba(0,255,150,0.3);
-    border-radius: 12px;
-    backdrop-filter: blur(10px);
-}
+    balance -= bet;
+    statusBox.innerText = "Bet placed: $" + bet;
 
-/* BET INPUT */
-.bet-panel input {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    border: none;
-    outline: none;
-}
+    if (!running) {
+        startRound();
+    }
+};
 
-/* BET BUTTON */
-.bet-panel button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    border: none;
-    border-radius: 8px;
-    background: #00ff99;
-    color: black;
-    font-weight: bold;
-    cursor: pointer;
-}
+// ===== CASH OUT =====
+cashBtn.onclick = () => {
 
-/* ===== RIGHT CASHOUT PANEL ===== */
-.cash-panel {
-    position: absolute;
-    right: 10px;
-    bottom: 20px;
-    width: 200px;
-    padding: 15px;
-    background: rgba(255, 0, 60, 0.08);
-    border: 1px solid rgba(255,0,60,0.3);
-    border-radius: 12px;
-    backdrop-filter: blur(10px);
-}
+    if (!running || bet <= 0) return;
 
-/* CASHOUT BUTTON */
-.cash-panel button {
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    background: #ff0033;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-}
+    let winnings = bet * multiplier;
+    balance += winnings;
 
-/* HOVER EFFECTS */
-.bet-panel button:hover,
-.cash-panel button:hover {
-    transform: scale(1.05);
+    statusBox.innerText =
+        "CASHED OUT at " +
+        multiplier.toFixed(2) +
+        "x +" +
+        winnings.toFixed(2);
+
+    bet = 0;
+};
+
+// ===== CRASH =====
+function crash() {
+
+    clearInterval(interval);
+    running = false;
+
+    statusBox.innerText =
+        "CRASHED at " +
+        multiplier.toFixed(2) +
+        "x";
+
+    bet = 0;
+
+    setTimeout(startRound, 3000);
 }
