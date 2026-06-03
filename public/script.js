@@ -11,31 +11,27 @@ const cashBtn = document.getElementById("cashBtn");
 
 let balance = 1000;
 let bet = 0;
-
-// ============================
-// CONNECT TO RENDER SERVER
-// ============================
-// IMPORTANT: replace this after deploy
-const socket = io("https://YOUR-RENDER-URL.onrender.com");
-
 let lastMultiplier = 1;
 
-// ============================
-// SOCKET EVENTS (REAL GAME)
-// ============================
+// 🔴 CONNECT TO RENDER SERVER (CHANGE THIS LATER)
+const socket = io("https://YOUR-RENDER-URL.onrender.com");
+
+// =================== CONNECTION ===================
 
 socket.on("connect", () => {
-    statusBox.innerText = "Connected to server";
+    statusBox.innerText = "Connected ✔";
 });
+
+// =================== GAME EVENTS ===================
 
 socket.on("round_start", () => {
 
     statusBox.innerText = "Round Started";
 
+    display.innerText = "1.00x";
+
     path.style.width = "0%";
     rocket.style.transform = "translate(0%, 0%)";
-
-    lastMultiplier = 1;
 });
 
 socket.on("update", (data) => {
@@ -46,7 +42,7 @@ socket.on("update", (data) => {
 
     path.style.width = Math.min(progress, 100) + "%";
 
-    // KEEP ROCKET INSIDE FRAME (CAMERA FIX)
+    // 🚀 KEEP ROCKET ALWAYS IN VIEW
     let x = Math.min(progress, 95);
     let y = Math.min(progress * 1.2, 90);
 
@@ -59,35 +55,26 @@ socket.on("crash", (data) => {
 
     statusBox.innerText = "CRASH " + data.multiplier + "x";
 
-    // reset bet on crash
     bet = 0;
 });
 
-// ============================
-// BET SYSTEM (CLIENT SIDE ONLY)
-// ============================
+// =================== BET ===================
 
 betBtn.onclick = () => {
 
     bet = parseFloat(betInput.value);
 
-    if (!bet || bet <= 0 || bet > balance) {
-        alert("Invalid bet");
-        return;
-    }
+    if (!bet || bet <= 0 || bet > balance) return;
 
     balance -= bet;
     balanceBox.innerText = "Balance: $" + balance.toFixed(2);
 
-    statusBox.innerText = "Bet placed: $" + bet;
-
-    // send to server
     socket.emit("bet", { amount: bet });
+
+    statusBox.innerText = "Bet placed: $" + bet;
 };
 
-// ============================
-// CASH OUT
-// ============================
+// =================== CASH OUT ===================
 
 cashBtn.onclick = () => {
 
@@ -99,16 +86,13 @@ cashBtn.onclick = () => {
 
     balanceBox.innerText = "Balance: $" + balance.toFixed(2);
 
-    statusBox.innerText =
-        "CASHED OUT at " +
-        lastMultiplier.toFixed(2) +
-        "x +" +
-        win.toFixed(2);
-
     socket.emit("cashout", {
         amount: bet,
         multiplier: lastMultiplier
     });
+
+    statusBox.innerText =
+        "CASHED OUT " + lastMultiplier.toFixed(2) + "x";
 
     bet = 0;
 };
