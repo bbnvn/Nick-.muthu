@@ -10,45 +10,38 @@
 <body>
 
 <header>
-    <h1>NICK BET</h1>
+    <h1>NICK BET AVIATOR</h1>
 </header>
 
-<div class="game-box">
+<div class="game">
 
-    <div class="balance">
-        LIVE MULTIPLAYER MODE
+    <div class="top-bar">
+        <div id="balance">Balance: $1000</div>
+        <div id="status">Loading...</div>
     </div>
 
     <div class="multiplier">1.00x</div>
 
     <div class="graph">
+
         <div class="path" id="path"></div>
         <div id="rocket">🚀</div>
-    </div>
 
-    <div class="status" id="status">
-        Waiting for server...
+        <!-- LEFT BET PANEL -->
+        <div class="bet-panel">
+            <input type="number" id="betInput" placeholder="Enter bet">
+            <button id="betBtn">BET</button>
+        </div>
+
+        <!-- RIGHT CASH PANEL -->
+        <div class="cash-panel">
+            <button id="cashBtn">CASH OUT</button>
+        </div>
+
     </div>
 
 </div>
 
 <script src="script.js"></script>
-
 </body>
-</html><div class="graph">
-
-    <div class="path" id="path"></div>
-    <div id="rocket">🚀</div>
-
-    <!-- LEFT BET PANEL -->
-    <div class="bet-panel">
-        <input type="number" id="betInput" placeholder="Enter bet">
-        <button id="betBtn">PLACE BET</button>
-    </div>
-
-    <!-- RIGHT CASHOUT PANEL -->
-    <div class="cash-panel">
-        <button id="cashBtn">CASH OUT</button>
-    </div>
-
-</div>
+</html>
