@@ -1,153 +1,98 @@
 
-const display = document.querySelector(".multiplier");
-const rocket = document.getElementById("rocket");
-const path = document.getElementById("path");
-const statusBox = document.getElementById("status");
-
-// ===== AUDIO =====
-const cashSound = new Audio("cashout.mp3");
-const crashSound = new Audio("crash.mp3");
-const betSound = new Audio("bet.mp3");
-
-// ===== GAME STATE =====
-let balance = 1000;
-let bet = 0;
-let autoBet = false;
-let running = false;
-
-let multiplier = 1;
-let progress = 0;
-let crashPoint = 0;
-let interval;
-
-// ===== UI (you must have these inputs/buttons in HTML) =====
-const betInput = document.createElement("input");
-betInput.placeholder = "Enter bet";
-betInput.type = "number";
-document.body.appendChild(betInput);
-
-const betBtn = document.createElement("button");
-betBtn.innerText = "BET";
-document.body.appendChild(betBtn);
-
-const cashBtn = document.createElement("button");
-cashBtn.innerText = "CASH OUT";
-document.body.appendChild(cashBtn);
-
-const autoBtn = document.createElement("button");
-autoBtn.innerText = "AUTO BET: OFF";
-document.body.appendChild(autoBtn);
-
-// ===== LIVE PLAYERS (FAKE) =====
-const playersBox = document.createElement("div");
-playersBox.innerHTML = "LIVE PLAYERS: 12";
-document.body.appendChild(playersBox);
-
-setInterval(() => {
-    let fakePlayers = Math.floor(Math.random() * 20 + 5);
-    playersBox.innerHTML = "LIVE PLAYERS: " + fakePlayers;
-}, 3000);
-
-// ===== START ROUND =====
-function startRound() {
-
-    running = true;
-    multiplier = 1;
-    progress = 0;
-
-    crashPoint = (Math.random() * 8 + 1).toFixed(2);
-
-    statusBox.innerText = "Round Started";
-
-    path.style.width = "0%";
-    rocket.style.left = "0%";
-    rocket.style.bottom = "0px";
-
-    interval = setInterval(() => {
-
-        multiplier += multiplier * 0.02;
-        progress += 0.8;
-
-        display.innerText = multiplier.toFixed(2) + "x";
-
-        path.style.width = progress + "%";
-        rocket.style.left = progress + "%";
-        rocket.style.bottom = (progress * 1.5) + "px";
-
-        // AUTO CASHOUT (simple logic)
-        if (autoBet && multiplier >= 2.0) {
-            cashOut();
-        }
-
-        if (multiplier >= crashPoint || progress >= 100) {
-            crash();
-        }
-
-    }, 100);
+/* ===== LAYOUT ===== */
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-// ===== BET =====
-betBtn.onclick = () => {
-
-    bet = parseFloat(betInput.value);
-
-    if (!bet || bet <= 0 || bet > balance) {
-        alert("Invalid bet");
-        return;
-    }
-
-    betSound.play();
-
-    balance -= bet;
-    statusBox.innerText = "Bet Placed: $" + bet;
-
-    if (!running) {
-        startRound();
-    }
-};
-
-// ===== CASH OUT =====
-function cashOut() {
-
-    if (!running || bet <= 0) return;
-
-    cashSound.play();
-
-    let winnings = bet * multiplier;
-    balance += winnings;
-
-    statusBox.innerText =
-        "CASHED OUT at " +
-        multiplier.toFixed(2) +
-        "x +" +
-        winnings.toFixed(2);
-
-    bet = 0;
+/* GAME BOX CENTER */
+.game-box {
+    width: 90%;
+    max-width: 800px;
 }
 
-// ===== CRASH =====
-function crash() {
-
-    clearInterval(interval);
-    running = false;
-
-    crashSound.play();
-
-    statusBox.innerText =
-        "CRASHED at " +
-        multiplier.toFixed(2) +
-        "x";
-
-    bet = 0;
-
-    setTimeout(startRound, 3000);
+/* ===== MULTIPLIER ===== */
+.multiplier {
+    font-size: 80px;
+    color: #00ff99;
+    text-align: center;
+    margin: 20px 0;
 }
 
-// ===== AUTO BET =====
-autoBtn.onclick = () => {
+/* ===== GRAPH AREA ===== */
+.graph {
+    position: relative;
+    height: 250px;
+    border-radius: 15px;
+    border: 2px solid rgba(0,255,150,0.2);
+    background: rgba(0,0,0,0.4);
+    overflow: hidden;
+}
 
-    autoBet = !autoBet;
+/* ===== LEFT BET PANEL (AVIATOR STYLE) ===== */
+.bet-panel {
+    position: absolute;
+    left: 10px;
+    bottom: 20px;
+    width: 200px;
+    padding: 15px;
+    background: rgba(0, 255, 150, 0.08);
+    border: 1px solid rgba(0,255,150,0.3);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+}
 
-    autoBtn.innerText =
-        "AUTO BET: " + (autoBet ? "ON" : "OFF");
-};
+/* BET INPUT */
+.bet-panel input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+}
+
+/* BET BUTTON */
+.bet-panel button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: none;
+    border-radius: 8px;
+    background: #00ff99;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* ===== RIGHT CASHOUT PANEL ===== */
+.cash-panel {
+    position: absolute;
+    right: 10px;
+    bottom: 20px;
+    width: 200px;
+    padding: 15px;
+    background: rgba(255, 0, 60, 0.08);
+    border: 1px solid rgba(255,0,60,0.3);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+}
+
+/* CASHOUT BUTTON */
+.cash-panel button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #ff0033;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* HOVER EFFECTS */
+.bet-panel button:hover,
+.cash-panel button:hover {
+    transform: scale(1.05);
+}
