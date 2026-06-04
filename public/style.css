@@ -10,7 +10,7 @@ body {
     color: white;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: justified;
 }
 
 header {
@@ -40,7 +40,7 @@ header {
 }
 
 .graph {
-    position: relative;
+    position: bottom;
     height: 300px;
     border-radius: 15px;
     background: rgba(255,255,255,0.03);
@@ -50,7 +50,7 @@ header {
 
 #rocket {
     position: absolute;
-    font-size: 30px;
+    font-size: 40px;
     left: 0;
     bottom: 0;
 }
